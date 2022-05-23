@@ -6,12 +6,11 @@ interface Props {
 }
 export const checkParameters = ({ type, schema }: Props) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const parameters = req[type] || ''
-      schema.parse(parameters)
-      return next()
-    } catch (error) {
-      return res.status(400).json(error)
+    const parameters = req[type] || ''
+    const validation = schema.safeParse(parameters)
+    if (!validation.success) {
+      return res.status(400).json({ errors: (validation as any).error?.issues })
     }
+    return next()
   }
 }

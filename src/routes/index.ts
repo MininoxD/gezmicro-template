@@ -3,18 +3,24 @@ import infoServer from '../../package.json'
 import { z } from 'zod'
 import { checkParameters } from '../middlewares/checkParameters'
 
-const testParams = z.object({
-  name: z.string({
-    required_error: 'El nombre es requerido',
-    invalid_type_error: 'El nombre debe ser un string'
-  }),
-  age: z.number({
-    required_error: 'La edad es requerida',
-    invalid_type_error: 'La edad debe ser un número'
-  }).max(100, {
-    message: 'La edad no debe ser mayor a 100'
-  }).min(18)
-})
+export const ParamsCreditScore = z.object({
+  documentNumber: z.preprocess((value) => {
+    if (value) return Number(value)
+    return undefined
+  }, z.number({
+    required_error: 'El número de documento es requerido',
+    invalid_type_error: 'El número de documento debe ser un número'
+  })),
+  documentType: z.enum(['DNI', 'PASAPORTE', 'CUIT']),
+  gender: z.preprocess((value) => value || undefined, z.enum(['F', 'M']).optional())
+}).refine(
+  (data) => {
+    if (data?.documentType === 'CUIT' && data?.documentNumber) return true
+    if (data?.documentType && data?.documentType && data?.gender) return true
+    return false
+  },
+  (data) => ({ message: `El genero es requerido cuando el documento es ${data?.documentType}` })
+)
 
 const mainRouter = Router()
 mainRouter.get('/', (req, res) => {
@@ -27,8 +33,8 @@ mainRouter.get('/', (req, res) => {
 
 mainRouter.get('/test',
   checkParameters({
-    type: 'body',
-    schema: testParams
+    type: 'query',
+    schema: ParamsCreditScore
   }),
   (req, res) => {
     res.send({
