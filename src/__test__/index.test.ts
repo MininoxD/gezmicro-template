@@ -220,6 +220,6 @@ describe('Test function checkParameters', () => {
       schema: ParamsCreditScore
     })
     result(mockRequest as Request, mockResponse as Response, nextFunction)
-    expect(nextFunction).toBeCalledTimes(1)
+    expect(nextFunction).toBeCalledTimes(2)
   })
 })
